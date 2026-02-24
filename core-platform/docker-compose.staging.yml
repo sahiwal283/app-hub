@@ -1,0 +1,46 @@
+version: '3.8'
+
+# Staging override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+
+services:
+  frontend:
+    container_name: platform-frontend-staging
+    environment:
+      - NEXT_PUBLIC_API_BASE=/api
+      - NODE_ENV=staging
+    ports:
+      - "3001:3000"  # Different port to avoid conflicts
+
+  backend:
+    container_name: platform-backend-staging
+    environment:
+      - DATABASE_URL=${DATABASE_URL_STAGING}
+      - JWT_SECRET=${JWT_SECRET_STAGING}
+      - NODE_ENV=staging
+      - PORT=4000
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN_STAGING:-}
+      - COOKIE_SECURE=${COOKIE_SECURE_STAGING:-false}
+    ports:
+      - "4001:4000"  # Different port to avoid conflicts
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: platform-db-staging
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_STAGING:-platform_user_staging}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_STAGING}
+      - POSTGRES_DB=${POSTGRES_DB_STAGING:-platform_staging}
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_STAGING:-platform_user_staging}"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data_staging:
+    driver: local

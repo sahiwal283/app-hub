@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`VersionTagContent matches snapshot 1`] = `
+<div
+  aria-label="Version 1.2.3 (20260224.1)"
+  class="max-w-[75vw] sm:max-w-xs truncate rounded-md border border-earthy-ebony/15 bg-earthy-ebony/5 px-2 py-1 text-xs text-earthy-charcoal/80"
+  title="Version 1.2.3 (20260224.1)"
+>
+  Version 1.2.3 (20260224.1)
+</div>
+`;

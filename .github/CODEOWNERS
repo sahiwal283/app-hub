@@ -1,0 +1,13 @@
+# Global fallback owner
+* @sahiwal283
+
+# Frontend ownership
+/core-platform/platform-frontend/ @sahiwal283
+
+# Backend ownership
+/core-platform/platform-backend/ @sahiwal283
+
+# DevOps / deployment ownership
+/core-platform/infra/ @sahiwal283
+/core-platform/docker-compose*.yml @sahiwal283
+/core-platform/nginx.snippet.conf @sahiwal283

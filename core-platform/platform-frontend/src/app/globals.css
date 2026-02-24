@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f4f6f3;
+  --surface: #ffffff;
+  --surface-muted: #eef2ed;
+  --text: #101418;
+  --text-muted: #4c5561;
+  --border: #c4ccd2;
+  --primary: #1f5f4b;
+  --primary-strong: #154637;
+  --secondary: #4f5d75;
+  --secondary-strong: #3d485f;
+  --success: #217a52;
+  --warn: #b96916;
+  --error: #b33a3a;
+  --focus-ring: #2d7e68;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  @apply antialiased;
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen;
+    background: linear-gradient(180deg, #f7f9f8 0%, #eef2ef 100%);
+    color: var(--text);
+  }
+
+  .app-nav {
+    @apply border-b shadow-sm backdrop-blur;
+    background-color: color-mix(in srgb, var(--surface) 92%, #dce3de 8%);
+    border-color: var(--border);
+  }
+
+  .app-nav-link {
+    @apply rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors;
+    color: var(--text-muted);
+  }
+
+  .app-nav-link:hover {
+    @apply bg-black/5;
+    color: var(--text);
+  }
+
+  .app-nav-link:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    --tw-ring-color: var(--focus-ring);
+  }
+
+  .app-nav-link-active {
+    @apply bg-black/10;
+    color: var(--text);
+  }
+
+  .app-card {
+    @apply rounded-xl border p-6 shadow-sm;
+    background-color: var(--surface);
+    border-color: var(--border);
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-xl border shadow-sm;
+    background-color: var(--surface);
+    border-color: var(--border);
+  }
+
+  .table-head {
+    @apply text-left text-xs font-semibold uppercase tracking-wide;
+    color: var(--text-muted);
+    background-color: var(--surface-muted);
+  }
+
+  .table-row {
+    @apply transition-colors;
+    border-color: var(--border);
+  }
+
+  .table-row:hover {
+    background-color: color-mix(in srgb, var(--surface-muted) 70%, white 30%);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    --tw-ring-color: var(--focus-ring);
+  }
+
+  .btn:active {
+    @apply translate-y-px;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-strong);
+  }
+
+  .btn-secondary {
+    background-color: color-mix(in srgb, var(--secondary) 14%, white 86%);
+    color: var(--secondary-strong);
+    border: 1px solid color-mix(in srgb, var(--secondary) 35%, white 65%);
+  }
+
+  .btn-secondary:hover {
+    background-color: color-mix(in srgb, var(--secondary) 20%, white 80%);
+  }
+
+  .btn-danger {
+    background-color: color-mix(in srgb, var(--error) 14%, white 86%);
+    color: var(--error);
+    border: 1px solid color-mix(in srgb, var(--error) 40%, white 60%);
+  }
+
+  .btn-danger:hover {
+    background-color: color-mix(in srgb, var(--error) 22%, white 78%);
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-sm font-medium;
+    color: var(--text);
+  }
+
+  .form-input,
+  .form-select {
+    @apply block w-full rounded-md border px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-100;
+    border-color: var(--border);
+    color: var(--text);
+    background-color: #ffffff;
+    --tw-ring-color: var(--focus-ring);
+  }
+
+  .form-input::placeholder {
+    color: color-mix(in srgb, var(--text-muted) 80%, white 20%);
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background-color: rgba(9, 14, 18, 0.66);
+  }
+
+  .modal-panel {
+    @apply w-full max-w-xl rounded-xl border p-6 shadow-2xl;
+    background-color: var(--surface);
+    border-color: var(--border);
+  }
+
+  .modal-title {
+    @apply mb-5 text-xl font-semibold;
+    color: var(--text);
+  }
+
+  .modal-actions {
+    @apply mt-6 flex justify-end gap-2 border-t pt-4;
+    border-color: var(--border);
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+
+  .badge-success {
+    background-color: color-mix(in srgb, var(--success) 16%, white 84%);
+    color: var(--success);
+  }
+
+  .badge-warn {
+    background-color: color-mix(in srgb, var(--warn) 18%, white 82%);
+    color: var(--warn);
+  }
+
+  .badge-secondary {
+    background-color: color-mix(in srgb, var(--secondary) 16%, white 84%);
+    color: var(--secondary-strong);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .loading-text {
+    @apply text-lg font-medium;
+    color: var(--text-muted);
+  }
+
+  .alert-error {
+    @apply rounded-md border p-4;
+    border-color: color-mix(in srgb, var(--error) 30%, white 70%);
+    background-color: color-mix(in srgb, var(--error) 8%, white 92%);
+    color: var(--error);
+  }
+
+  .alert-success {
+    @apply rounded-md border p-4;
+    border-color: color-mix(in srgb, var(--success) 30%, white 70%);
+    background-color: color-mix(in srgb, var(--success) 10%, white 90%);
+    color: var(--success);
+  }
+
+  .check-label {
+    @apply flex items-center gap-2 text-sm;
+    color: var(--text-muted);
+  }
+
+  .check-input {
+    @apply h-4 w-4 rounded border;
+    border-color: var(--border);
+    accent-color: var(--primary);
+  }
+
+  .selection-list {
+    @apply max-h-44 overflow-auto rounded-md border p-3;
+    border-color: var(--border);
+    background-color: var(--surface-muted);
+  }
+
+  .input-disabled {
+    background-color: var(--surface-muted);
+    color: color-mix(in srgb, var(--text-muted) 85%, white 15%);
+  }
+}

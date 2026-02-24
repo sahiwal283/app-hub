@@ -1,0 +1,95 @@
+// Prisma schema for Core Platform
+// Database: PostgreSQL
+// All IDs use UUID native type
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppType {
+  internal
+  external
+}
+
+enum GlobalRole {
+  admin
+  user
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  globalRole   GlobalRole @default(user) @map("global_role")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  userApps    UserApp[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+  @@index([username])
+  @@index([isActive])
+}
+
+model App {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String    @unique
+  type        AppType
+  internalPath String?  @map("internal_path")  // For internal apps: e.g., "/apps/trade-show"
+  externalUrl String?   @map("external_url")  // For external apps: full URL
+  icon        String?
+  version     String    @default("1.0.0")
+  isActive    Boolean   @default(true) @map("is_active")
+  metadata    Json?     // For future brand/access extensions
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  userApps    UserApp[]
+
+  @@map("apps")
+  @@index([slug])
+  @@index([isActive])
+  @@index([type])
+}
+
+model UserApp {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  appId     String   @map("app_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  app  App  @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@map("user_apps")
+  @@unique([userId, appId])
+  @@index([userId])
+  @@index([appId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid  // Nullable for system actions
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
