@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getCurrentUser, User, App, logout } from '@/lib/api';
 import AppBrand from '@/components/app-brand';
 import { resolveIconSymbol } from '@/lib/icon-symbols';
+import { getEtDateLabel, getEtGreeting } from '@/lib/greeting';
 import { safeDisplayText } from '@/lib/text';
 
 export default function DashboardPage() {
@@ -66,6 +67,9 @@ export default function DashboardPage() {
   }
 
   const apps = user.apps || [];
+  const displayName = safeDisplayText(user.username, 'there');
+  const greeting = getEtGreeting();
+  const currentDateLabel = getEtDateLabel();
 
   return (
     <div className="app-shell">
@@ -94,6 +98,12 @@ export default function DashboardPage() {
 
       <main className="mx-auto max-w-7xl py-8 sm:px-6 lg:px-8">
         <div className="px-4 sm:px-0">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              {`Good ${greeting}, ${displayName}!`}
+            </h2>
+            <p className="mt-1 text-sm text-muted sm:text-base">{currentDateLabel}</p>
+          </div>
           <h2 className="mb-6 text-3xl font-semibold tracking-tight">My Apps</h2>
 
           {apps.length === 0 ? (
