@@ -136,4 +136,26 @@ describe('AdminAppsPage modal close behavior', () => {
       );
     });
   });
+
+  it('reopens create modal with clean default values', async () => {
+    render(<AdminAppsPage />);
+    await screen.findByText('App Management');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create App' }));
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Temporary Name' },
+    });
+    fireEvent.change(screen.getByLabelText('Slug'), {
+      target: { value: 'temporary-slug' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mark as Beta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create App' }));
+
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.getByLabelText('Slug')).toHaveValue('');
+    expect(screen.getByRole('checkbox', { name: 'Mark as Beta' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Active' })).toBeChecked();
+  });
 });

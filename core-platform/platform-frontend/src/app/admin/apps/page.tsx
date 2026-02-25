@@ -29,7 +29,8 @@ export default function AdminAppsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedApp, setSelectedApp] = useState<App | null>(null);
-  const [formData, setFormData] = useState(DEFAULT_APP_FORM);
+  const [createFormData, setCreateFormData] = useState(DEFAULT_APP_FORM);
+  const [editFormData, setEditFormData] = useState(DEFAULT_APP_FORM);
   const [initialEditFormSnapshot, setInitialEditFormSnapshot] = useState<string | null>(null);
   const [betaFilter, setBetaFilter] = useState<'all' | 'beta' | 'stable'>('all');
 
@@ -63,7 +64,7 @@ export default function AdminAppsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createApp(formData);
+      await createApp(createFormData);
       closeCreateModal();
       loadApps();
     } catch (err: any) {
@@ -84,7 +85,7 @@ export default function AdminAppsPage() {
       version: app.version,
       isActive: app.isActive,
     };
-    setFormData(nextFormData);
+    setEditFormData(nextFormData);
     setInitialEditFormSnapshot(JSON.stringify(nextFormData));
     setShowEditModal(true);
   };
@@ -93,10 +94,11 @@ export default function AdminAppsPage() {
     e.preventDefault();
     if (!selectedApp) return;
     try {
-      await updateApp(selectedApp.id, formData);
+      await updateApp(selectedApp.id, editFormData);
       setShowEditModal(false);
       setSelectedApp(null);
       setInitialEditFormSnapshot(null);
+      setEditFormData(DEFAULT_APP_FORM);
       loadApps();
     } catch (err: any) {
       alert(safeDisplayText(err.message, 'Failed to update app'));
@@ -113,15 +115,21 @@ export default function AdminAppsPage() {
     }
   };
 
+  const openCreateModal = () => {
+    // Create and edit forms must stay isolated between sessions.
+    setCreateFormData(DEFAULT_APP_FORM);
+    setShowCreateModal(true);
+  };
+
   const closeCreateModal = () => {
     setShowCreateModal(false);
-    setFormData(DEFAULT_APP_FORM);
+    setCreateFormData(DEFAULT_APP_FORM);
   };
 
   const closeEditModal = () => {
     const isDirty =
       initialEditFormSnapshot !== null &&
-      JSON.stringify(formData) !== initialEditFormSnapshot;
+      JSON.stringify(editFormData) !== initialEditFormSnapshot;
     if (isDirty) {
       const shouldClose = window.confirm(
         'You have unsaved changes. Close without saving?'
@@ -133,6 +141,7 @@ export default function AdminAppsPage() {
     setShowEditModal(false);
     setSelectedApp(null);
     setInitialEditFormSnapshot(null);
+    setEditFormData(DEFAULT_APP_FORM);
   };
 
   useEffect(() => {
@@ -156,7 +165,7 @@ export default function AdminAppsPage() {
     return () => {
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [showCreateModal, showEditModal, formData, initialEditFormSnapshot]);
+  }, [showCreateModal, showEditModal, editFormData, initialEditFormSnapshot]);
 
   if (loading) {
     return (
@@ -209,7 +218,7 @@ export default function AdminAppsPage() {
                 <option value="beta">Beta only</option>
                 <option value="stable">Stable only</option>
               </select>
-              <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
+              <button onClick={openCreateModal} className="btn btn-primary">
                 Create App
               </button>
             </div>
@@ -304,9 +313,9 @@ export default function AdminAppsPage() {
                   type="text"
                   required
                   className="form-input"
-                  value={formData.name}
+                  value={createFormData.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setCreateFormData({ ...createFormData, name: e.target.value })
                   }
                 />
                 </div>
@@ -318,9 +327,9 @@ export default function AdminAppsPage() {
                   required
                   pattern="[a-z0-9-]+"
                   className="form-input"
-                  value={formData.slug}
+                  value={createFormData.slug}
                   onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
+                    setCreateFormData({ ...createFormData, slug: e.target.value })
                   }
                 />
                 </div>
@@ -328,10 +337,10 @@ export default function AdminAppsPage() {
                 <label className="form-label">Type</label>
                 <select
                   className="form-select"
-                  value={formData.type}
+                  value={createFormData.type}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
+                    setCreateFormData({
+                      ...createFormData,
                       type: e.target.value as 'internal' | 'external',
                     })
                   }
@@ -340,7 +349,7 @@ export default function AdminAppsPage() {
                   <option value="external">External</option>
                 </select>
                 </div>
-                {formData.type === 'internal' ? (
+                {createFormData.type === 'internal' ? (
                   <div>
                   <label htmlFor="create-app-internal-path" className="form-label">Internal Path</label>
                   <input
@@ -348,9 +357,9 @@ export default function AdminAppsPage() {
                     type="text"
                     required
                     className="form-input"
-                    value={formData.internalPath}
+                    value={createFormData.internalPath}
                     onChange={(e) =>
-                      setFormData({ ...formData, internalPath: e.target.value })
+                      setCreateFormData({ ...createFormData, internalPath: e.target.value })
                     }
                   />
                   </div>
@@ -362,9 +371,9 @@ export default function AdminAppsPage() {
                     type="url"
                     required
                     className="form-input"
-                    value={formData.externalUrl}
+                    value={createFormData.externalUrl}
                     onChange={(e) =>
-                      setFormData({ ...formData, externalUrl: e.target.value })
+                      setCreateFormData({ ...createFormData, externalUrl: e.target.value })
                     }
                   />
                   </div>
@@ -373,19 +382,19 @@ export default function AdminAppsPage() {
                 <label className="form-label">Icon</label>
                 <SymbolPicker
                   id="create-app-icon"
-                  value={formData.iconSymbol}
-                  onChange={(nextSymbol) => setFormData({ ...formData, iconSymbol: nextSymbol })}
+                  value={createFormData.iconSymbol}
+                  onChange={(nextSymbol) => setCreateFormData({ ...createFormData, iconSymbol: nextSymbol })}
                 />
                 <div className="mt-2 rounded-md border border-slate-300 bg-slate-50 p-3">
                   <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Card preview</p>
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
                     <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-base">
-                      {resolveIconSymbol(formData.iconSymbol)}
+                      {resolveIconSymbol(createFormData.iconSymbol)}
                     </span>
-                    <span>{safeDisplayText(formData.name, 'App Name')}</span>
-                    {formData.isBeta && <span className="badge badge-beta">Beta</span>}
+                    <span>{safeDisplayText(createFormData.name, 'App Name')}</span>
+                    {createFormData.isBeta && <span className="badge badge-beta">Beta</span>}
                     <span className="text-xs text-slate-500">
-                      ({getIconSymbolLabel(resolveIconSymbol(formData.iconSymbol))})
+                      ({getIconSymbolLabel(resolveIconSymbol(createFormData.iconSymbol))})
                     </span>
                   </div>
                 </div>
@@ -397,18 +406,18 @@ export default function AdminAppsPage() {
                   type="text"
                   required
                   className="form-input"
-                  value={formData.version}
+                  value={createFormData.version}
                   onChange={(e) =>
-                    setFormData({ ...formData, version: e.target.value })
+                    setCreateFormData({ ...createFormData, version: e.target.value })
                   }
                 />
                 </div>
                 <label className="check-label">
                 <input
                   type="checkbox"
-                  checked={formData.isActive}
+                  checked={createFormData.isActive}
                   onChange={(e) =>
-                    setFormData({ ...formData, isActive: e.target.checked })
+                    setCreateFormData({ ...createFormData, isActive: e.target.checked })
                   }
                   className="check-input"
                 />
@@ -417,9 +426,9 @@ export default function AdminAppsPage() {
                 <label className="check-label">
                   <input
                     type="checkbox"
-                    checked={formData.isBeta}
+                    checked={createFormData.isBeta}
                     onChange={(e) =>
-                      setFormData({ ...formData, isBeta: e.target.checked })
+                      setCreateFormData({ ...createFormData, isBeta: e.target.checked })
                     }
                     className="check-input"
                   />
@@ -472,9 +481,9 @@ export default function AdminAppsPage() {
                   type="text"
                   required
                   className="form-input"
-                  value={formData.name}
+                  value={editFormData.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setEditFormData({ ...editFormData, name: e.target.value })
                   }
                 />
                 </div>
@@ -486,9 +495,9 @@ export default function AdminAppsPage() {
                   required
                   pattern="[a-z0-9-]+"
                   className="form-input"
-                  value={formData.slug}
+                  value={editFormData.slug}
                   onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
+                    setEditFormData({ ...editFormData, slug: e.target.value })
                   }
                 />
                 </div>
@@ -496,10 +505,10 @@ export default function AdminAppsPage() {
                 <label className="form-label">Type</label>
                 <select
                   className="form-select"
-                  value={formData.type}
+                  value={editFormData.type}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
+                    setEditFormData({
+                      ...editFormData,
                       type: e.target.value as 'internal' | 'external',
                     })
                   }
@@ -508,7 +517,7 @@ export default function AdminAppsPage() {
                   <option value="external">External</option>
                 </select>
                 </div>
-                {formData.type === 'internal' ? (
+                {editFormData.type === 'internal' ? (
                   <div>
                   <label htmlFor="edit-app-internal-path" className="form-label">Internal Path</label>
                   <input
@@ -516,9 +525,9 @@ export default function AdminAppsPage() {
                     type="text"
                     required
                     className="form-input"
-                    value={formData.internalPath}
+                    value={editFormData.internalPath}
                     onChange={(e) =>
-                      setFormData({ ...formData, internalPath: e.target.value })
+                      setEditFormData({ ...editFormData, internalPath: e.target.value })
                     }
                   />
                   </div>
@@ -530,9 +539,9 @@ export default function AdminAppsPage() {
                     type="url"
                     required
                     className="form-input"
-                    value={formData.externalUrl}
+                    value={editFormData.externalUrl}
                     onChange={(e) =>
-                      setFormData({ ...formData, externalUrl: e.target.value })
+                      setEditFormData({ ...editFormData, externalUrl: e.target.value })
                     }
                   />
                   </div>
@@ -541,19 +550,19 @@ export default function AdminAppsPage() {
                 <label className="form-label">Icon</label>
                 <SymbolPicker
                   id="edit-app-icon"
-                  value={formData.iconSymbol}
-                  onChange={(nextSymbol) => setFormData({ ...formData, iconSymbol: nextSymbol })}
+                  value={editFormData.iconSymbol}
+                  onChange={(nextSymbol) => setEditFormData({ ...editFormData, iconSymbol: nextSymbol })}
                 />
                 <div className="mt-2 rounded-md border border-slate-300 bg-slate-50 p-3">
                   <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Card preview</p>
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
                     <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-base">
-                      {resolveIconSymbol(formData.iconSymbol)}
+                      {resolveIconSymbol(editFormData.iconSymbol)}
                     </span>
-                    <span>{safeDisplayText(formData.name, 'App Name')}</span>
-                    {formData.isBeta && <span className="badge badge-beta">Beta</span>}
+                    <span>{safeDisplayText(editFormData.name, 'App Name')}</span>
+                    {editFormData.isBeta && <span className="badge badge-beta">Beta</span>}
                     <span className="text-xs text-slate-500">
-                      ({getIconSymbolLabel(resolveIconSymbol(formData.iconSymbol))})
+                      ({getIconSymbolLabel(resolveIconSymbol(editFormData.iconSymbol))})
                     </span>
                   </div>
                 </div>
@@ -565,18 +574,18 @@ export default function AdminAppsPage() {
                   type="text"
                   required
                   className="form-input"
-                  value={formData.version}
+                  value={editFormData.version}
                   onChange={(e) =>
-                    setFormData({ ...formData, version: e.target.value })
+                    setEditFormData({ ...editFormData, version: e.target.value })
                   }
                 />
                 </div>
                 <label className="check-label">
                 <input
                   type="checkbox"
-                  checked={formData.isActive}
+                  checked={editFormData.isActive}
                   onChange={(e) =>
-                    setFormData({ ...formData, isActive: e.target.checked })
+                    setEditFormData({ ...editFormData, isActive: e.target.checked })
                   }
                   className="check-input"
                 />
@@ -585,9 +594,9 @@ export default function AdminAppsPage() {
                 <label className="check-label">
                   <input
                     type="checkbox"
-                    checked={formData.isBeta}
+                    checked={editFormData.isBeta}
                     onChange={(e) =>
-                      setFormData({ ...formData, isBeta: e.target.checked })
+                      setEditFormData({ ...editFormData, isBeta: e.target.checked })
                     }
                     className="check-input"
                   />
