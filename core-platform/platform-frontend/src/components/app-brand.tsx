@@ -26,7 +26,7 @@ export function AppBrandContent({
           compact ? 'text-lg sm:text-xl' : 'text-xl'
         }`}
       >
-        Booute App Launcher
+        Boomin & Haute Internal App Launcher
       </span>
       <span className="badge badge-secondary shrink-0 text-[11px] leading-none">
         {versionLabel}

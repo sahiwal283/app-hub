@@ -32,7 +32,7 @@ export default function LoginPage() {
       <div className="app-card w-full max-w-md space-y-8 shadow-xl">
         <div>
           <h2 className="mt-2 text-center text-3xl font-bold tracking-tight">
-            Booute App Launcher
+            Boomin & Haute Internal App Launcher
           </h2>
           <p className="mt-2 text-center text-sm text-muted">
             Sign in to your account
