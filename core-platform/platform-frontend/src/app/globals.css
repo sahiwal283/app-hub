@@ -194,6 +194,12 @@ body {
     color: var(--secondary-strong);
   }
 
+  .badge-beta {
+    background-color: color-mix(in srgb, var(--warn) 22%, white 78%);
+    color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, white 65%);
+  }
+
   .text-muted {
     color: var(--text-muted);
   }

@@ -16,6 +16,7 @@ const DEFAULT_APP_FORM = {
   internalPath: '',
   externalUrl: '',
   iconSymbol: '◆',
+  isBeta: false,
   version: '1.0.0',
   isActive: true,
 };
@@ -30,6 +31,7 @@ export default function AdminAppsPage() {
   const [selectedApp, setSelectedApp] = useState<App | null>(null);
   const [formData, setFormData] = useState(DEFAULT_APP_FORM);
   const [initialEditFormSnapshot, setInitialEditFormSnapshot] = useState<string | null>(null);
+  const [betaFilter, setBetaFilter] = useState<'all' | 'beta' | 'stable'>('all');
 
   useEffect(() => {
     getCurrentUser()
@@ -78,6 +80,7 @@ export default function AdminAppsPage() {
       internalPath: app.internalPath || '',
       externalUrl: app.externalUrl || '',
       iconSymbol: resolveIconSymbol(app.iconSymbol),
+      isBeta: Boolean(app.isBeta),
       version: app.version,
       isActive: app.isActive,
     };
@@ -163,6 +166,16 @@ export default function AdminAppsPage() {
     );
   }
 
+  const filteredApps = apps.filter((app) => {
+    if (betaFilter === 'beta') {
+      return Boolean(app.isBeta);
+    }
+    if (betaFilter === 'stable') {
+      return !app.isBeta;
+    }
+    return true;
+  });
+
   return (
     <div className="app-shell">
       <nav className="app-nav">
@@ -185,9 +198,21 @@ export default function AdminAppsPage() {
         <div className="px-4 sm:px-0">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-3xl font-semibold tracking-tight">App Management</h1>
-            <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-              Create App
-            </button>
+            <div className="flex items-center gap-3">
+              <select
+                className="form-select w-40"
+                aria-label="Filter apps by beta status"
+                value={betaFilter}
+                onChange={(e) => setBetaFilter(e.target.value as 'all' | 'beta' | 'stable')}
+              >
+                <option value="all">All apps</option>
+                <option value="beta">Beta only</option>
+                <option value="stable">Stable only</option>
+              </select>
+              <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
+                Create App
+              </button>
+            </div>
           </div>
 
           <div className="table-shell">
@@ -203,7 +228,7 @@ export default function AdminAppsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {apps.map((app) => (
+                {filteredApps.map((app) => (
                   <tr key={app.id} className="table-row">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold">
                       <span className="mr-2 inline-flex rounded-md border border-slate-300 bg-slate-50 p-1 align-middle text-slate-600">
@@ -212,6 +237,7 @@ export default function AdminAppsPage() {
                         </span>
                       </span>
                       {safeDisplayText(app.name, 'Untitled App')}
+                      {app.isBeta && <span className="badge badge-beta ml-2">Beta</span>}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
                       {safeDisplayText(app.slug, 'slug')}
@@ -272,8 +298,9 @@ export default function AdminAppsPage() {
             <form onSubmit={handleCreate} className="flex max-h-[78vh] flex-col">
               <div className="modal-body space-y-4 pr-1">
                 <div>
-                <label className="form-label">Name</label>
+                <label htmlFor="create-app-name" className="form-label">Name</label>
                 <input
+                  id="create-app-name"
                   type="text"
                   required
                   className="form-input"
@@ -284,8 +311,9 @@ export default function AdminAppsPage() {
                 />
                 </div>
                 <div>
-                <label className="form-label">Slug</label>
+                <label htmlFor="create-app-slug" className="form-label">Slug</label>
                 <input
+                  id="create-app-slug"
                   type="text"
                   required
                   pattern="[a-z0-9-]+"
@@ -314,8 +342,9 @@ export default function AdminAppsPage() {
                 </div>
                 {formData.type === 'internal' ? (
                   <div>
-                  <label className="form-label">Internal Path</label>
+                  <label htmlFor="create-app-internal-path" className="form-label">Internal Path</label>
                   <input
+                    id="create-app-internal-path"
                     type="text"
                     required
                     className="form-input"
@@ -327,8 +356,9 @@ export default function AdminAppsPage() {
                   </div>
                 ) : (
                   <div>
-                  <label className="form-label">External URL</label>
+                  <label htmlFor="create-app-external-url" className="form-label">External URL</label>
                   <input
+                    id="create-app-external-url"
                     type="url"
                     required
                     className="form-input"
@@ -353,6 +383,7 @@ export default function AdminAppsPage() {
                       {resolveIconSymbol(formData.iconSymbol)}
                     </span>
                     <span>{safeDisplayText(formData.name, 'App Name')}</span>
+                    {formData.isBeta && <span className="badge badge-beta">Beta</span>}
                     <span className="text-xs text-slate-500">
                       ({getIconSymbolLabel(resolveIconSymbol(formData.iconSymbol))})
                     </span>
@@ -360,8 +391,9 @@ export default function AdminAppsPage() {
                 </div>
                 </div>
                 <div>
-                <label className="form-label">Version</label>
+                <label htmlFor="create-app-version" className="form-label">Version</label>
                 <input
+                  id="create-app-version"
                   type="text"
                   required
                   className="form-input"
@@ -381,6 +413,17 @@ export default function AdminAppsPage() {
                   className="check-input"
                 />
                 Active
+                </label>
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.isBeta}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isBeta: e.target.checked })
+                    }
+                    className="check-input"
+                  />
+                  Mark as Beta
                 </label>
               </div>
               <div className="modal-actions">
@@ -423,8 +466,9 @@ export default function AdminAppsPage() {
             <form onSubmit={handleUpdate} className="flex max-h-[78vh] flex-col">
               <div className="modal-body space-y-4 pr-1">
                 <div>
-                <label className="form-label">Name</label>
+                <label htmlFor="edit-app-name" className="form-label">Name</label>
                 <input
+                  id="edit-app-name"
                   type="text"
                   required
                   className="form-input"
@@ -435,8 +479,9 @@ export default function AdminAppsPage() {
                 />
                 </div>
                 <div>
-                <label className="form-label">Slug</label>
+                <label htmlFor="edit-app-slug" className="form-label">Slug</label>
                 <input
+                  id="edit-app-slug"
                   type="text"
                   required
                   pattern="[a-z0-9-]+"
@@ -465,8 +510,9 @@ export default function AdminAppsPage() {
                 </div>
                 {formData.type === 'internal' ? (
                   <div>
-                  <label className="form-label">Internal Path</label>
+                  <label htmlFor="edit-app-internal-path" className="form-label">Internal Path</label>
                   <input
+                    id="edit-app-internal-path"
                     type="text"
                     required
                     className="form-input"
@@ -478,8 +524,9 @@ export default function AdminAppsPage() {
                   </div>
                 ) : (
                   <div>
-                  <label className="form-label">External URL</label>
+                  <label htmlFor="edit-app-external-url" className="form-label">External URL</label>
                   <input
+                    id="edit-app-external-url"
                     type="url"
                     required
                     className="form-input"
@@ -504,6 +551,7 @@ export default function AdminAppsPage() {
                       {resolveIconSymbol(formData.iconSymbol)}
                     </span>
                     <span>{safeDisplayText(formData.name, 'App Name')}</span>
+                    {formData.isBeta && <span className="badge badge-beta">Beta</span>}
                     <span className="text-xs text-slate-500">
                       ({getIconSymbolLabel(resolveIconSymbol(formData.iconSymbol))})
                     </span>
@@ -511,8 +559,9 @@ export default function AdminAppsPage() {
                 </div>
                 </div>
                 <div>
-                <label className="form-label">Version</label>
+                <label htmlFor="edit-app-version" className="form-label">Version</label>
                 <input
+                  id="edit-app-version"
                   type="text"
                   required
                   className="form-input"
@@ -532,6 +581,17 @@ export default function AdminAppsPage() {
                   className="check-input"
                 />
                 Active
+                </label>
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.isBeta}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isBeta: e.target.checked })
+                    }
+                    className="check-input"
+                  />
+                  Mark as Beta
                 </label>
               </div>
               <div className="modal-actions">

@@ -117,6 +117,7 @@ export default function DashboardPage() {
                       <div>
                         <h3 className="text-lg font-semibold">{safeDisplayText(app.name, 'Untitled App')}</h3>
                         <p className="text-sm text-muted">v{safeDisplayText(app.version, '--')}</p>
+                        {app.isBeta && <span className="badge badge-beta mt-1">Beta</span>}
                       </div>
                     </div>
                   </div>

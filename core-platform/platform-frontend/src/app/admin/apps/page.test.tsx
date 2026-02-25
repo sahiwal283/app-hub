@@ -41,6 +41,7 @@ describe('AdminAppsPage modal close behavior', () => {
           version: '1.0.0',
           isActive: true,
           iconSymbol: '◆',
+          isBeta: true,
         },
       ],
     } as any);
@@ -97,5 +98,42 @@ describe('AdminAppsPage modal close behavior', () => {
     });
     expect(mockedApi.updateApp).not.toHaveBeenCalled();
     confirmMock.mockRestore();
+  });
+
+  it('renders Beta badge for beta apps', async () => {
+    render(<AdminAppsPage />);
+    await screen.findByText('App Management');
+
+    expect(screen.getByText('Beta')).toBeInTheDocument();
+  });
+
+  it('submits create app with beta toggle enabled', async () => {
+    render(<AdminAppsPage />);
+    await screen.findByText('App Management');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create App' }));
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Preview App' },
+    });
+    fireEvent.change(screen.getByLabelText('Slug'), {
+      target: { value: 'preview-app' },
+    });
+    fireEvent.change(screen.getByLabelText('Internal Path'), {
+      target: { value: '/preview' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mark as Beta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(mockedApi.createApp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Preview App',
+          slug: 'preview-app',
+          internalPath: '/preview',
+          isBeta: true,
+        })
+      );
+    });
   });
 });
