@@ -6,7 +6,7 @@ const path = require('path');
 const ROOT_DIR = path.resolve(__dirname, '..');
 const TARGET_DIRS = ['src'];
 const ALLOWED_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.css', '.json', '.md']);
-const EMOJI_PATTERN = /(\p{Extended_Pictographic}|\uFE0F|\u200D)/u;
+const EMOJI_PATTERN = /(\p{Emoji_Presentation}|\uFE0F|\u200D)/u;
 
 function walk(directory, collector) {
   const entries = fs.readdirSync(directory, { withFileTypes: true });

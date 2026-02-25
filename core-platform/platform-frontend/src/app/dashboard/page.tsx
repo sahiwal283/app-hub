@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser, User, App, logout } from '@/lib/api';
 import AppBrand from '@/components/app-brand';
-import { AppIcon } from '@/components/icons';
+import { resolveIconSymbol } from '@/lib/icon-symbols';
 import { safeDisplayText } from '@/lib/text';
 
 export default function DashboardPage() {
@@ -110,7 +110,9 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
                       <span className="rounded-md border border-slate-300 bg-slate-50 p-1 text-slate-600">
-                        <AppIcon iconKey={app.iconKey} className="h-5 w-5" />
+                        <span className="inline-block w-5 text-center text-base leading-none">
+                          {resolveIconSymbol(app.iconSymbol)}
+                        </span>
                       </span>
                       <div>
                         <h3 className="text-lg font-semibold">{safeDisplayText(app.name, 'Untitled App')}</h3>

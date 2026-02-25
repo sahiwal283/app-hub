@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser, getApps, createApp, updateApp, deleteApp, App, User } from '@/lib/api';
 import AppBrand from '@/components/app-brand';
-import { AppIcon, APP_ICON_OPTIONS, resolveAppIconKey } from '@/components/icons';
+import SymbolPicker from '@/components/symbol-picker';
+import { getIconSymbolLabel, resolveIconSymbol } from '@/lib/icon-symbols';
 import { safeDisplayText } from '@/lib/text';
 
 export default function AdminAppsPage() {
@@ -22,7 +23,7 @@ export default function AdminAppsPage() {
     type: 'internal' as 'internal' | 'external',
     internalPath: '',
     externalUrl: '',
-    iconKey: 'grid',
+    iconSymbol: '◆',
     version: '1.0.0',
     isActive: true,
   });
@@ -65,7 +66,7 @@ export default function AdminAppsPage() {
         type: 'internal',
         internalPath: '',
         externalUrl: '',
-        iconKey: 'grid',
+        iconSymbol: '◆',
         version: '1.0.0',
         isActive: true,
       });
@@ -83,7 +84,7 @@ export default function AdminAppsPage() {
       type: app.type,
       internalPath: app.internalPath || '',
       externalUrl: app.externalUrl || '',
-      iconKey: resolveAppIconKey(app.iconKey),
+      iconSymbol: resolveIconSymbol(app.iconSymbol),
       version: app.version,
       isActive: app.isActive,
     });
@@ -165,7 +166,9 @@ export default function AdminAppsPage() {
                   <tr key={app.id} className="table-row">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold">
                       <span className="mr-2 inline-flex rounded-md border border-slate-300 bg-slate-50 p-1 align-middle text-slate-600">
-                        <AppIcon iconKey={app.iconKey} className="h-4 w-4" />
+                        <span className="inline-block w-4 text-center text-sm leading-none">
+                          {resolveIconSymbol(app.iconSymbol)}
+                        </span>
                       </span>
                       {safeDisplayText(app.name, 'Untitled App')}
                     </td>
@@ -276,19 +279,23 @@ export default function AdminAppsPage() {
               )}
               <div>
                 <label className="form-label">Icon</label>
-                <select
-                  className="form-select"
-                  value={formData.iconKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, iconKey: resolveAppIconKey(e.target.value) })
-                  }
-                >
-                  {APP_ICON_OPTIONS.map((option) => (
-                    <option key={option.key} value={option.key}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <SymbolPicker
+                  id="create-app-icon"
+                  value={formData.iconSymbol}
+                  onChange={(nextSymbol) => setFormData({ ...formData, iconSymbol: nextSymbol })}
+                />
+                <div className="mt-2 rounded-md border border-slate-300 bg-slate-50 p-3">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Card preview</p>
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-base">
+                      {resolveIconSymbol(formData.iconSymbol)}
+                    </span>
+                    <span>{safeDisplayText(formData.name, 'App Name')}</span>
+                    <span className="text-xs text-slate-500">
+                      ({getIconSymbolLabel(resolveIconSymbol(formData.iconSymbol))})
+                    </span>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="form-label">Version</label>
@@ -401,19 +408,23 @@ export default function AdminAppsPage() {
               )}
               <div>
                 <label className="form-label">Icon</label>
-                <select
-                  className="form-select"
-                  value={formData.iconKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, iconKey: resolveAppIconKey(e.target.value) })
-                  }
-                >
-                  {APP_ICON_OPTIONS.map((option) => (
-                    <option key={option.key} value={option.key}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <SymbolPicker
+                  id="edit-app-icon"
+                  value={formData.iconSymbol}
+                  onChange={(nextSymbol) => setFormData({ ...formData, iconSymbol: nextSymbol })}
+                />
+                <div className="mt-2 rounded-md border border-slate-300 bg-slate-50 p-3">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Card preview</p>
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-base">
+                      {resolveIconSymbol(formData.iconSymbol)}
+                    </span>
+                    <span>{safeDisplayText(formData.name, 'App Name')}</span>
+                    <span className="text-xs text-slate-500">
+                      ({getIconSymbolLabel(resolveIconSymbol(formData.iconSymbol))})
+                    </span>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="form-label">Version</label>

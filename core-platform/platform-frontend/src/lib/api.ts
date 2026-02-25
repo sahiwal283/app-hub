@@ -15,6 +15,7 @@ export interface App {
   type: 'internal' | 'external';
   internalPath?: string;
   externalUrl?: string;
+  iconSymbol?: string;
   iconKey?: string;
   version: string;
   isActive: boolean;
