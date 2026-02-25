@@ -147,18 +147,31 @@ body {
   }
 
   .modal-panel {
-    @apply w-full max-w-xl rounded-xl border p-6 shadow-2xl;
+    @apply flex w-full max-w-xl flex-col rounded-xl border p-6 shadow-2xl;
+    max-height: min(92vh, 760px);
+    overflow: hidden;
     background-color: var(--surface);
     border-color: var(--border);
   }
 
+  .modal-header {
+    @apply mb-3 flex items-center justify-between gap-2;
+  }
+
   .modal-title {
-    @apply mb-5 text-xl font-semibold;
+    @apply text-xl font-semibold;
     color: var(--text);
   }
 
+  .modal-body {
+    @apply flex-1 overflow-y-auto;
+  }
+
   .modal-actions {
-    @apply mt-6 flex justify-end gap-2 border-t pt-4;
+    @apply mt-4 flex justify-end gap-2 border-t pt-4;
+    background-color: var(--surface);
+    position: sticky;
+    bottom: 0;
     border-color: var(--border);
   }
 

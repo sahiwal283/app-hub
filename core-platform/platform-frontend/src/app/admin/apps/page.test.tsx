@@ -1,0 +1,101 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import AdminAppsPage from './page';
+import * as api from '@/lib/api';
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+  }),
+}));
+
+jest.mock('@/lib/api', () => ({
+  getCurrentUser: jest.fn(),
+  getVersionMeta: jest.fn(),
+  getApps: jest.fn(),
+  createApp: jest.fn(),
+  updateApp: jest.fn(),
+  deleteApp: jest.fn(),
+}));
+
+const mockedApi = api as jest.Mocked<typeof api>;
+
+describe('AdminAppsPage modal close behavior', () => {
+  beforeEach(() => {
+    mockedApi.getCurrentUser.mockResolvedValue({
+      user: {
+        id: 'u1',
+        username: 'admin',
+        globalRole: 'admin',
+        isActive: true,
+      },
+    } as any);
+
+    mockedApi.getApps.mockResolvedValue({
+      apps: [
+        {
+          id: 'a1',
+          name: 'Billing',
+          slug: 'billing',
+          type: 'internal',
+          version: '1.0.0',
+          isActive: true,
+          iconSymbol: '◆',
+        },
+      ],
+    } as any);
+
+    mockedApi.createApp.mockResolvedValue({ app: {} } as any);
+    mockedApi.updateApp.mockResolvedValue({ app: {} } as any);
+    mockedApi.deleteApp.mockResolvedValue({ app: {} } as any);
+    mockedApi.getVersionMeta.mockResolvedValue({
+      version: '1.6.1',
+      build: 'test',
+    } as any);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('closes edit modal with Escape without triggering save', async () => {
+    render(<AdminAppsPage />);
+
+    await screen.findByText('App Management');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('dialog', { name: 'Edit App' })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Edit App' })).not.toBeInTheDocument();
+    });
+    expect(mockedApi.updateApp).not.toHaveBeenCalled();
+  });
+
+  it('prompts before closing dirty edit form', async () => {
+    const confirmMock = jest.spyOn(window, 'confirm').mockReturnValue(false);
+
+    render(<AdminAppsPage />);
+
+    await screen.findByText('App Management');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('dialog', { name: 'Edit App' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByDisplayValue('Billing'), {
+      target: { value: 'Billing Updated' },
+    });
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(confirmMock).toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Edit App' })).toBeInTheDocument();
+
+    confirmMock.mockReturnValue(true);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Edit App' })).not.toBeInTheDocument();
+    });
+    expect(mockedApi.updateApp).not.toHaveBeenCalled();
+    confirmMock.mockRestore();
+  });
+});

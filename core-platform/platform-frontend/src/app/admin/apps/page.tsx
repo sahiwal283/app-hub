@@ -9,6 +9,17 @@ import SymbolPicker from '@/components/symbol-picker';
 import { getIconSymbolLabel, resolveIconSymbol } from '@/lib/icon-symbols';
 import { safeDisplayText } from '@/lib/text';
 
+const DEFAULT_APP_FORM = {
+  name: '',
+  slug: '',
+  type: 'internal' as 'internal' | 'external',
+  internalPath: '',
+  externalUrl: '',
+  iconSymbol: '◆',
+  version: '1.0.0',
+  isActive: true,
+};
+
 export default function AdminAppsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -17,16 +28,8 @@ export default function AdminAppsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedApp, setSelectedApp] = useState<App | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    type: 'internal' as 'internal' | 'external',
-    internalPath: '',
-    externalUrl: '',
-    iconSymbol: '◆',
-    version: '1.0.0',
-    isActive: true,
-  });
+  const [formData, setFormData] = useState(DEFAULT_APP_FORM);
+  const [initialEditFormSnapshot, setInitialEditFormSnapshot] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser()
@@ -59,17 +62,7 @@ export default function AdminAppsPage() {
     e.preventDefault();
     try {
       await createApp(formData);
-      setShowCreateModal(false);
-      setFormData({
-        name: '',
-        slug: '',
-        type: 'internal',
-        internalPath: '',
-        externalUrl: '',
-        iconSymbol: '◆',
-        version: '1.0.0',
-        isActive: true,
-      });
+      closeCreateModal();
       loadApps();
     } catch (err: any) {
       alert(safeDisplayText(err.message, 'Failed to create app'));
@@ -78,7 +71,7 @@ export default function AdminAppsPage() {
 
   const handleEdit = (app: App) => {
     setSelectedApp(app);
-    setFormData({
+    const nextFormData = {
       name: app.name,
       slug: app.slug,
       type: app.type,
@@ -87,7 +80,9 @@ export default function AdminAppsPage() {
       iconSymbol: resolveIconSymbol(app.iconSymbol),
       version: app.version,
       isActive: app.isActive,
-    });
+    };
+    setFormData(nextFormData);
+    setInitialEditFormSnapshot(JSON.stringify(nextFormData));
     setShowEditModal(true);
   };
 
@@ -98,6 +93,7 @@ export default function AdminAppsPage() {
       await updateApp(selectedApp.id, formData);
       setShowEditModal(false);
       setSelectedApp(null);
+      setInitialEditFormSnapshot(null);
       loadApps();
     } catch (err: any) {
       alert(safeDisplayText(err.message, 'Failed to update app'));
@@ -113,6 +109,51 @@ export default function AdminAppsPage() {
       alert(safeDisplayText(err.message, 'Failed to delete app'));
     }
   };
+
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    setFormData(DEFAULT_APP_FORM);
+  };
+
+  const closeEditModal = () => {
+    const isDirty =
+      initialEditFormSnapshot !== null &&
+      JSON.stringify(formData) !== initialEditFormSnapshot;
+    if (isDirty) {
+      const shouldClose = window.confirm(
+        'You have unsaved changes. Close without saving?'
+      );
+      if (!shouldClose) {
+        return;
+      }
+    }
+    setShowEditModal(false);
+    setSelectedApp(null);
+    setInitialEditFormSnapshot(null);
+  };
+
+  useEffect(() => {
+    if (!showCreateModal && !showEditModal) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+      event.preventDefault();
+      if (showEditModal) {
+        closeEditModal();
+        return;
+      }
+      closeCreateModal();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showCreateModal, showEditModal, formData, initialEditFormSnapshot]);
 
   if (loading) {
     return (
@@ -205,11 +246,32 @@ export default function AdminAppsPage() {
       </main>
 
       {showCreateModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Create App">
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create App"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeCreateModal();
+            }
+          }}
+        >
           <div className="modal-panel">
-            <h2 className="modal-title">Create App</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
+            <div className="modal-header">
+              <h2 className="modal-title">Create App</h2>
+              <button
+                type="button"
+                className="btn btn-secondary px-3 py-1"
+                aria-label="Close create app modal"
+                onClick={closeCreateModal}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="flex max-h-[78vh] flex-col">
+              <div className="modal-body space-y-4 pr-1">
+                <div>
                 <label className="form-label">Name</label>
                 <input
                   type="text"
@@ -220,8 +282,8 @@ export default function AdminAppsPage() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                 />
-              </div>
-              <div>
+                </div>
+                <div>
                 <label className="form-label">Slug</label>
                 <input
                   type="text"
@@ -233,8 +295,8 @@ export default function AdminAppsPage() {
                     setFormData({ ...formData, slug: e.target.value })
                   }
                 />
-              </div>
-              <div>
+                </div>
+                <div>
                 <label className="form-label">Type</label>
                 <select
                   className="form-select"
@@ -249,9 +311,9 @@ export default function AdminAppsPage() {
                   <option value="internal">Internal</option>
                   <option value="external">External</option>
                 </select>
-              </div>
-              {formData.type === 'internal' ? (
-                <div>
+                </div>
+                {formData.type === 'internal' ? (
+                  <div>
                   <label className="form-label">Internal Path</label>
                   <input
                     type="text"
@@ -262,9 +324,9 @@ export default function AdminAppsPage() {
                       setFormData({ ...formData, internalPath: e.target.value })
                     }
                   />
-                </div>
-              ) : (
-                <div>
+                  </div>
+                ) : (
+                  <div>
                   <label className="form-label">External URL</label>
                   <input
                     type="url"
@@ -275,9 +337,9 @@ export default function AdminAppsPage() {
                       setFormData({ ...formData, externalUrl: e.target.value })
                     }
                   />
-                </div>
-              )}
-              <div>
+                  </div>
+                )}
+                <div>
                 <label className="form-label">Icon</label>
                 <SymbolPicker
                   id="create-app-icon"
@@ -296,8 +358,8 @@ export default function AdminAppsPage() {
                     </span>
                   </div>
                 </div>
-              </div>
-              <div>
+                </div>
+                <div>
                 <label className="form-label">Version</label>
                 <input
                   type="text"
@@ -308,8 +370,8 @@ export default function AdminAppsPage() {
                     setFormData({ ...formData, version: e.target.value })
                   }
                 />
-              </div>
-              <label className="check-label">
+                </div>
+                <label className="check-label">
                 <input
                   type="checkbox"
                   checked={formData.isActive}
@@ -319,9 +381,10 @@ export default function AdminAppsPage() {
                   className="check-input"
                 />
                 Active
-              </label>
+                </label>
+              </div>
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="btn btn-secondary">
+                <button type="button" onClick={closeCreateModal} className="btn btn-secondary">
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary">
@@ -334,11 +397,32 @@ export default function AdminAppsPage() {
       )}
 
       {showEditModal && selectedApp && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Edit App">
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit App"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeEditModal();
+            }
+          }}
+        >
           <div className="modal-panel">
-            <h2 className="modal-title">Edit App</h2>
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <div>
+            <div className="modal-header">
+              <h2 className="modal-title">Edit App</h2>
+              <button
+                type="button"
+                className="btn btn-secondary px-3 py-1"
+                aria-label="Close edit app modal"
+                onClick={closeEditModal}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleUpdate} className="flex max-h-[78vh] flex-col">
+              <div className="modal-body space-y-4 pr-1">
+                <div>
                 <label className="form-label">Name</label>
                 <input
                   type="text"
@@ -349,8 +433,8 @@ export default function AdminAppsPage() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                 />
-              </div>
-              <div>
+                </div>
+                <div>
                 <label className="form-label">Slug</label>
                 <input
                   type="text"
@@ -362,8 +446,8 @@ export default function AdminAppsPage() {
                     setFormData({ ...formData, slug: e.target.value })
                   }
                 />
-              </div>
-              <div>
+                </div>
+                <div>
                 <label className="form-label">Type</label>
                 <select
                   className="form-select"
@@ -378,9 +462,9 @@ export default function AdminAppsPage() {
                   <option value="internal">Internal</option>
                   <option value="external">External</option>
                 </select>
-              </div>
-              {formData.type === 'internal' ? (
-                <div>
+                </div>
+                {formData.type === 'internal' ? (
+                  <div>
                   <label className="form-label">Internal Path</label>
                   <input
                     type="text"
@@ -391,9 +475,9 @@ export default function AdminAppsPage() {
                       setFormData({ ...formData, internalPath: e.target.value })
                     }
                   />
-                </div>
-              ) : (
-                <div>
+                  </div>
+                ) : (
+                  <div>
                   <label className="form-label">External URL</label>
                   <input
                     type="url"
@@ -404,9 +488,9 @@ export default function AdminAppsPage() {
                       setFormData({ ...formData, externalUrl: e.target.value })
                     }
                   />
-                </div>
-              )}
-              <div>
+                  </div>
+                )}
+                <div>
                 <label className="form-label">Icon</label>
                 <SymbolPicker
                   id="edit-app-icon"
@@ -425,8 +509,8 @@ export default function AdminAppsPage() {
                     </span>
                   </div>
                 </div>
-              </div>
-              <div>
+                </div>
+                <div>
                 <label className="form-label">Version</label>
                 <input
                   type="text"
@@ -437,8 +521,8 @@ export default function AdminAppsPage() {
                     setFormData({ ...formData, version: e.target.value })
                   }
                 />
-              </div>
-              <label className="check-label">
+                </div>
+                <label className="check-label">
                 <input
                   type="checkbox"
                   checked={formData.isActive}
@@ -448,14 +532,12 @@ export default function AdminAppsPage() {
                   className="check-input"
                 />
                 Active
-              </label>
+                </label>
+              </div>
               <div className="modal-actions">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setSelectedApp(null);
-                  }}
+                  onClick={closeEditModal}
                   className="btn btn-secondary"
                 >
                   Cancel
