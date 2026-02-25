@@ -37,19 +37,31 @@ export function AppBrandContent({
 
 export default function AppBrand({ compact = false }: { compact?: boolean }) {
   const [versionLabel, setVersionLabel] = useState('v--');
+  const versionSource = '/api/meta/version';
 
   useEffect(() => {
     let isMounted = true;
 
+    // Read version exclusively from the live version endpoint.
     getVersionMeta()
       .then((meta) => {
         if (isMounted) {
           setVersionLabel(getVersionLabel(meta.version));
+          console.debug('Resolved app version metadata', {
+            source: versionSource,
+            version: meta.version,
+            build: meta.build ?? null,
+            commit: meta.commit ?? null,
+          });
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (isMounted) {
           setVersionLabel('v--');
+          console.debug('Failed to resolve app version metadata', {
+            source: versionSource,
+            error: error instanceof Error ? error.message : 'unknown',
+          });
         }
       });
 

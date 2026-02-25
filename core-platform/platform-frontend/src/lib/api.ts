@@ -31,8 +31,11 @@ export interface ApiError {
 
 export interface VersionMeta {
   version: string;
-  build: string;
+  build?: string;
+  commit?: string;
 }
+
+const VERSION_ENDPOINT = '/meta/version';
 
 async function fetchApi<T>(
   endpoint: string,
@@ -73,7 +76,13 @@ export async function getCurrentUser(): Promise<{ user: User }> {
 }
 
 export async function getVersionMeta(): Promise<VersionMeta> {
-  return fetchApi<VersionMeta>('/meta/version');
+  return fetchApi<VersionMeta>(VERSION_ENDPOINT, {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+  });
 }
 
 export async function changePassword(
