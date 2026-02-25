@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentUser, getApps, createApp, updateApp, deleteApp, App, User } from '@/lib/api';
+import { getCurrentUser, getApps, createApp, updateApp, activateApp, deactivateApp, App, User } from '@/lib/api';
 import AppBrand from '@/components/app-brand';
 import SymbolPicker from '@/components/symbol-picker';
 import { getIconSymbolLabel, resolveIconSymbol } from '@/lib/icon-symbols';
@@ -105,13 +105,37 @@ export default function AdminAppsPage() {
     }
   };
 
-  const handleDelete = async (app: App) => {
-    if (!confirm(`Are you sure you want to deactivate ${app.name}?`)) return;
+  const handleToggleActive = async (app: App) => {
+    const actionLabel = app.isActive ? 'deactivate' : 'activate';
+    if (!confirm(`Are you sure you want to ${actionLabel} ${app.name}?`)) return;
+
+    const previousApps = apps;
+    const nextIsActive = !app.isActive;
+
+    // Optimistically update row state so action text/status flips immediately.
+    setApps((currentApps) =>
+      currentApps.map((currentApp) =>
+        currentApp.id === app.id ? { ...currentApp, isActive: nextIsActive } : currentApp
+      )
+    );
+
     try {
-      await deleteApp(app.id);
-      loadApps();
+      let updatedApp: App;
+      if (app.isActive) {
+        const response = await deactivateApp(app.id);
+        updatedApp = response.app;
+      } else {
+        const response = await activateApp(app.id);
+        updatedApp = response.app;
+      }
+      setApps((currentApps) =>
+        currentApps.map((currentApp) =>
+          currentApp.id === app.id ? { ...currentApp, ...updatedApp } : currentApp
+        )
+      );
     } catch (err: any) {
-      alert(safeDisplayText(err.message, 'Failed to delete app'));
+      setApps(previousApps);
+      alert(safeDisplayText(err.message, 'Failed to update app status'));
     }
   };
 
@@ -267,8 +291,11 @@ export default function AdminAppsPage() {
                         <button onClick={() => handleEdit(app)} className="btn btn-secondary px-3 py-1.5">
                           Edit
                         </button>
-                        <button onClick={() => handleDelete(app)} className="btn btn-danger px-3 py-1.5">
-                          Deactivate
+                        <button
+                          onClick={() => handleToggleActive(app)}
+                          className={`btn px-3 py-1.5 ${app.isActive ? 'btn-danger' : 'btn-primary'}`}
+                        >
+                          {app.isActive ? 'Deactivate' : 'Activate'}
                         </button>
                       </div>
                     </td>

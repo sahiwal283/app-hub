@@ -145,6 +145,18 @@ export async function deleteApp(id: string) {
   });
 }
 
+export async function activateApp(id: string) {
+  return fetchApi<{ app: App }>(`/admin/apps/${id}/activate`, {
+    method: 'POST',
+  });
+}
+
+export async function deactivateApp(id: string) {
+  return fetchApi<{ app: App }>(`/admin/apps/${id}/deactivate`, {
+    method: 'POST',
+  });
+}
+
 export async function getAuditLogs(limit = 100, offset = 0) {
   return fetchApi<{ logs: any[]; pagination: any }>(
     `/admin/audit?limit=${limit}&offset=${offset}`

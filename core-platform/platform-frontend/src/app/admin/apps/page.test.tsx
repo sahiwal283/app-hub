@@ -15,7 +15,8 @@ jest.mock('@/lib/api', () => ({
   getApps: jest.fn(),
   createApp: jest.fn(),
   updateApp: jest.fn(),
-  deleteApp: jest.fn(),
+  activateApp: jest.fn(),
+  deactivateApp: jest.fn(),
 }));
 
 const mockedApi = api as jest.Mocked<typeof api>;
@@ -48,7 +49,18 @@ describe('AdminAppsPage modal close behavior', () => {
 
     mockedApi.createApp.mockResolvedValue({ app: {} } as any);
     mockedApi.updateApp.mockResolvedValue({ app: {} } as any);
-    mockedApi.deleteApp.mockResolvedValue({ app: {} } as any);
+    mockedApi.activateApp.mockImplementation(async (id: string) => ({
+      app: {
+        id,
+        isActive: true,
+      },
+    } as any));
+    mockedApi.deactivateApp.mockImplementation(async (id: string) => ({
+      app: {
+        id,
+        isActive: false,
+      },
+    } as any));
     mockedApi.getVersionMeta.mockResolvedValue({
       version: '1.6.1',
       build: 'test',
@@ -157,5 +169,43 @@ describe('AdminAppsPage modal close behavior', () => {
     expect(screen.getByLabelText('Slug')).toHaveValue('');
     expect(screen.getByRole('checkbox', { name: 'Mark as Beta' })).not.toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Active' })).toBeChecked();
+  });
+
+  it('shows contextual deactivate action for active apps', async () => {
+    render(<AdminAppsPage />);
+    await screen.findByText('App Management');
+
+    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
+  });
+
+  it('shows activate action for inactive apps and toggles status optimistically', async () => {
+    mockedApi.getApps.mockResolvedValue({
+      apps: [
+        {
+          id: 'a2',
+          name: 'Support',
+          slug: 'support',
+          type: 'internal',
+          version: '1.0.0',
+          isActive: false,
+          iconSymbol: '◆',
+          isBeta: false,
+        },
+      ],
+    } as any);
+
+    const confirmMock = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<AdminAppsPage />);
+    await screen.findByText('App Management');
+
+    const activateButton = screen.getByRole('button', { name: 'Activate' });
+    fireEvent.click(activateButton);
+
+    await waitFor(() => {
+      expect(mockedApi.activateApp).toHaveBeenCalledWith('a2');
+    });
+    expect(confirmMock).toHaveBeenCalledWith('Are you sure you want to activate Support?');
+    confirmMock.mockRestore();
   });
 });
